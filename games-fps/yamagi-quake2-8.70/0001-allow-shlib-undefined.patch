@@ -1,0 +1,11 @@
+--- a/Makefile	2026-07-12 19:59:36.954864519 +0000
++++ b/Makefile	2026-07-12 19:59:36.958921954 +0000
+@@ -428,7 +428,7 @@
+ ifndef UBSAN
+ ifneq ($(YQ2_OSTYPE), Darwin)
+ ifneq ($(YQ2_OSTYPE), OpenBSD)
+-override LDFLAGS += -Wl,--no-undefined
++override LDFLAGS += -Wl,--no-undefined -Wl,--allow-shlib-undefined
+ endif
+ endif
+ endif

@@ -1,0 +1,20 @@
+Revert upstream 0d743a71 ("globalshortcuts: Do not register shortcuts on
+session creation", FIXED-IN 6.7.4).
+
+Chromium/Electron (GlobalAcceleratorListenerLinux::OnListShortcuts) skips
+BindShortcuts when every shortcut id is already returned by ListShortcuts.
+Since 6.7.4 stored shortcuts are listed but no longer registered with
+kglobalaccel until BindShortcuts, so they stay inactive from the second
+launch on (e.g. Claude Desktop quick entry hotkey).
+
+--- a/src/globalshortcuts.cpp
++++ b/src/globalshortcuts.cpp
+@@ -479,6 +479,8 @@ void GlobalShortcutsSession::loadActions()
+         action->setObjectName(name);
+         action->setText(info.friendlyName());
+         action->setShortcuts(info.keys());
++        // Explicitly load existing global shortcut setting
++        KGlobalAccel::self()->setShortcut(action.get(), action->shortcuts(), KGlobalAccel::Autoloading);
+     }
+ }
+ 

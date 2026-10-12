@@ -1,0 +1,11 @@
+--- a/gen_initramfs.sh
++++ b/gen_initramfs.sh
+@@ -2231,7 +2231,7 @@
+ 		mkdir -p "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+ 		cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+ 
+-		"${CPIO_COMMAND}" --quiet -i -F "${CPIO_ARCHIVE}" 2>/dev/null \
++		"${CPIO_COMMAND}" --quiet -i -u -F "${CPIO_ARCHIVE}" 2>/dev/null \
+ 			|| gen_die "Failed to extract cpio '${CPIO_ARCHIVE}' for dedupe"
+ 
+ 		if ! isTrue "$(tc-is-cross-compiler)"

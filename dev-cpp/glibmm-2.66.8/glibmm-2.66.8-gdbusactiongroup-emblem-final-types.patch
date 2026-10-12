@@ -1,0 +1,71 @@
+Fix for dev-cpp/glibmm-2.66.8 (giomm-2.4, SLOT 2) building against
+newer glib (>=2.89.2, e.g. dev-libs/glib-2.89.4), matching the fix
+already carried by dev-cpp/glibmm-2.88.1-r666::Miezhiko (SLOT 2.68)
+for the same issue -- see that overlay's
+glibmm-2.88.1-gdbusactiongroup-emblem-final-types.patch and
+glibmm-2.88.1-dbusactiongroup-final-type-check.patch, backports of
+upstream glibmm commits 00508a702de117967ee8ae8c70f3786c4d73f958 and
+289433385cb9d94e87e18a226042a0334cf1c947.
+
+Newer glib declares GDBusActionGroup and GEmblem via
+G_DECLARE_FINAL_TYPE, which auto-generates a typedef for
+GDBusActionGroupClass/GEmblemClass. glibmm-2.66.8's *pre-generated*
+giomm-2.4 headers, shipped under untracked/gio/giomm/ in the release
+tarball (meson builds directly from these -- gmmproc/mm-common is not
+re-run, so patching the gio/src/*.hg m4 sources has no effect on the
+actual build), unconditionally declare their own `using X = struct _X`
+alias for the same names, causing:
+
+  untracked/gio/giomm/dbusactiongroup.h:32:7: error: conflicting
+  declaration 'using GDBusActionGroupClass =
+  struct _GDBusActionGroupClass'
+  note: previous declaration as 'typedef struct GDBusActionGroupClass
+  GDBusActionGroupClass' (from glib's G_DECLARE_FINAL_TYPE)
+
+  untracked/gio/giomm/emblem.h:31:7: error: conflicting declaration
+  'using GEmblemClass = struct _GEmblemClass'
+
+This patches the shipped generated headers directly (not the .hg
+sources) and guards the alias behind a glib version check, so both
+succeed compiling against glib >= 2.89.2. It does not backport the
+upstream _DO_NOT_DERIVE_GTYPE/_ABI_AS_WITH_DERIVED_GTYPE/
+_STRUCT_NOT_HIDDEN changes to the generated derived-GType boilerplate
+(that would require re-running gmmproc); this is enough to fix the
+build for consumers, such as media-gfx/inkscape, that don't derive
+custom GTypes from Gio::DBus::ActionGroup or Gio::Emblem.
+
+--- a/untracked/gio/giomm/dbusactiongroup.h
++++ b/untracked/gio/giomm/dbusactiongroup.h
+@@ -29,7 +29,15 @@
+
+ #ifndef DOXYGEN_SHOULD_SKIP_THIS
+ using GDBusActionGroup = struct _GDBusActionGroup;
++// GDBusActionGroup was declared a final type between GLib 2.89.1 and 2.89.2.
++// Before that, GDBusActionGroupClass was not declared in GLib.
++// The preprocessor macro G_DBUS_ACTION_GROUP_CLASS was defined, though.
++#if !GLIB_CHECK_VERSION(2,89,1) || (!GLIB_CHECK_VERSION(2,89,2) && defined(G_DBUS_ACTION_GROUP_CLASS))
++  // glib < 2.89.1 or (glib == 2.89.1 and G_DBUS_ACTION_GROUP_CLASS is a preprocessor macro)
++  // GDBusActionGroup is not a final type,
++  // GDBusActionGroupClass is not declared in GLib.
+ using GDBusActionGroupClass = struct _GDBusActionGroupClass;
++#endif
+ #endif /* DOXYGEN_SHOULD_SKIP_THIS */
+
+
+--- a/untracked/gio/giomm/emblem.h
++++ b/untracked/gio/giomm/emblem.h
+@@ -24,11 +24,16 @@
+
+ #include <glibmm/object.h>
+ #include <giomm/icon.h>
++#include <gio/gio.h>
+
+
+ #ifndef DOXYGEN_SHOULD_SKIP_THIS
+ using GEmblem = struct _GEmblem;
++// Newer glib (>= 2.89.2) declares GEmblem as G_DECLARE_FINAL_TYPE, which
++// already provides a typedef for GEmblemClass.
++#if !GLIB_CHECK_VERSION(2,89,2)
+ using GEmblemClass = struct _GEmblemClass;
++#endif
+ #endif /* DOXYGEN_SHOULD_SKIP_THIS */
