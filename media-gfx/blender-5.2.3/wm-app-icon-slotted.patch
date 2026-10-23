@@ -1,0 +1,11 @@
+--- a/source/blender/windowmanager/CMakeLists.txt	2026-10-23 08:54:54.472846775 +0200
++++ b/source/blender/windowmanager/CMakeLists.txt	2026-10-23 08:54:54.576847368 +0200
+@@ -134,7 +134,7 @@
+   )
+   # Full-color application icon for the Wayland window icon.
+   data_to_c(
+-    "${CMAKE_SOURCE_DIR}/release/freedesktop/icons/scalable/apps/blender.svg"
++    "${CMAKE_SOURCE_DIR}/release/freedesktop/icons/scalable/apps/blender-5.2.svg"
+     "${CMAKE_CURRENT_BINARY_DIR}/blender_app_icon.svg.c"
+     SRC
+     # Name override to avoid conflicting with the UI icon `datatoc_blender_svg`.
