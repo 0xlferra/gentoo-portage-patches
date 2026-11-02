@@ -1,0 +1,13 @@
+--- a/src/midi/posix/MidiReceiver_pthread.h	2024-11-28 10:44:05.000000000 +0100
++++ b/src/midi/posix/MidiReceiver_pthread.h	2026-11-02 01:01:51.450832663 +0100
+@@ -33,7 +33,9 @@
+ 
+ #include <vector>
+ 
+-class RtMidiIn;
++// rtmidi >= 6.1 declares its classes in namespace rt::midi
++namespace rt { namespace midi { class RtMidiIn; } }
++using rt::midi::RtMidiIn;
+ 
+ class MidiReceiver
+ {
